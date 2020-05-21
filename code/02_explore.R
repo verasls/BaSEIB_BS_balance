@@ -55,7 +55,7 @@ balance_vars <- c(
 )
 
 # Physical activity variables
-pa_vars <- c("steps", "sb", "lpa", "mpa", "vpa", "mvpa")
+pa_vars <- c("steps", "sb", "lpa", "mpa", "mvpa")
 
 # SF36 variables
 sf36_vars <- c(
