@@ -12,8 +12,10 @@ map_shapiro <- function(data, vars) {
 
   tests <- purrr::map(vars, ~ data[[.x]]) %>% 
     purrr::map(shapiro.test)
-  tibble(group = unique(data$group), time = unique(data$time), variables = vars) %>%
-    mutate(
+  tibble::tibble(
+    group = unique(data$group), time = unique(data$time), variables = vars
+  ) %>%
+    dplyr::mutate(
       shapiro_wilk = purrr::map_dbl(tests, "statistic"),
       p_value = purrr::map_dbl(tests, "p.value")
     )
