@@ -105,3 +105,36 @@ map_levene(df_6m, strength_vars, "group")
 map_levene(df_6m, balance_vars, "group")
 map_levene(df_6m, pa_vars, "group")
 map_levene(df_6m, sf36_vars, "group")
+
+# Descriptives ----------------------------------------------------------------
+
+df_long %>% 
+  group_by(group, time) %>% 
+  summarise_at(
+    demo_anthro_vars, list(mean = mean, sd = sd), na.rm = TRUE
+  )
+df_long %>% 
+  group_by(group, time) %>% 
+  summarise_at(
+    body_comp_vars, list(mean = mean, sd = sd), na.rm = TRUE
+  )
+df_long %>% 
+  group_by(group, time) %>% 
+  summarise_at(
+    strength_vars, list(mean = mean, sd = sd), na.rm = TRUE
+  )
+df_long %>% 
+  group_by(group, time) %>% 
+  summarise_at(
+    balance_vars, list(mean = mean, sd = sd), na.rm = TRUE
+  )
+df_long %>% 
+  group_by(group, time) %>% 
+  summarise_at(
+    pa_vars, list(mean = mean, sd = sd), na.rm = TRUE
+  )
+df_long %>% 
+  group_by(group, time) %>% 
+  summarise_at(
+    sf36_vars, list(mean = mean, sd = sd), na.rm = TRUE
+  )
