@@ -21,30 +21,14 @@ df <- read_delim(here("data", "data.csv"), delim = ";") %>%
   # Correct the type of variables wrongly parsed as character
   mutate_if(is.character, as.numeric)
 
-# Final sample selection
-# Not selected because:
-#   No balance data in both 0M and 6M: 009, 014, 031, 034, 036, 038, 039, 070,
-#     075, 085;
-#   Duplication in CG and IG: 069, 070;
-#   To balance sex variable between CG & EG: 079, 086, 088;
-#   Balance outliers: 10, 28, 30, 
-
-selected <- c(
-  5, 6, 8, 11, 20, 21, 23, 24, 26, 41, 44, 45, 54, 61,
-  83, 670, 690, 700, 710, 770, 780, 810, 850, 890, 910
-)
-df <- df %>% filter(id %in% selected)
-
 # Clean sample size
 args_css <- list(
   var = c(
     "weight","bmi","waist_circumference","hip_circumference","waist_hip_ratio",
-    "percent_whole_body_fat_mass","whole_body_lean_mass","pt_knee_60ds_exten",
-    "pt_knee_60ds_flexi","pt_knee_60ds_exten_divided_whole_body_total_mass",
-    "pt_knee_60ds_flexi_divided_whole_body_total_mass","ellipse_eo","vap_eo",
-    "sdap_eo","vml_eo","sdml_eo","vt_eo","steps","sb","lpa","mvpa",
-    "physical_functioning","role_limitations_physical","bodily_pain",
-    "general_health","vitality","social_functioning",
+    "pt_knee_60ds_exten", "pt_knee_60ds_exten_divided_whole_body_total_mass",
+    "ellipse_eo","vap_eo", "sdap_eo","vml_eo","sdml_eo","vt_eo","steps","sb",
+    "lpa","mvpa", "physical_functioning","role_limitations_physical",
+    "bodily_pain", "general_health","vitality","social_functioning",
     "role_limitations_emotional","mental_health","physical_component",
     "mental_component"
   ),
@@ -56,26 +40,9 @@ for (i in 1:length(args_css[[1]])) {
 }
 
 # Compute deltas
-var <- c(
-  "weight", "bmi", "waist_circumference", "hip_circumference", 
-  "waist_hip_ratio", "percent_whole_body_fat_mass", "android_total_mass",
-  "gynoid_total_mass", "android_gynoid_ratio", "lower_limbs_total_mass",
-  "upper_body_total_mass", "whole_body_total_mass", "whole_body_fat_mass",
-  "whole_body_lean_mass", "pt_knee_60ds_exten", "pt_knee_60ds_flexi",
-  "pt_knee_60ds_exten_divided_whole_body_total_mass", 
-  "pt_knee_60ds_flexi_divided_whole_body_total_mass", "pt_trunk_60ds_exten",
-  "pt_trunk_60ds_flexi", "pt_trunk_60ds_exten_divided_whole_body_total_mass",
-  "pt_trunk_60ds_flexi_divided_whole_body_total_mass", "ellipse_eo", "vap_eo",
-  "sdap_eo", "vml_eo", "sdml_eo", "vt_eo", "ellipse_ec", "vap_ec", "sdap_ec",
-  "vml_ec", "sdml_ec", "vt_ec", "steps", "sb", "lpa", "mpa", "vpa", "mvpa",
-  "physical_functioning", "role_limitations_physical", "bodily_pain",
-  "general_health", "vitality", "social_functioning",
-  "role_limitations_emotional", "mental_health", "physical_component",
-  "mental_component"
-)
-baseline <- map_chr(var, ~ paste0(.x, "_0m"))
-followup <- map_chr(var, ~ paste0(.x, "_6m"))
-var_name <- map_chr(var, ~ paste0("delta_", .x))
+baseline <- map_chr(args_css, ~ paste0(.x, "_0m"))
+followup <- map_chr(args_css, ~ paste0(.x, "_6m"))
+var_name <- map_chr(args_css, ~ paste0("delta_", .x))
 args_pc <- list(baseline = baseline, followup = followup, var_name = var_name)
 for (i in 1:length(args_pc[[1]])) {
   df <- percent_change(

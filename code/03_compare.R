@@ -24,15 +24,13 @@ demo_anthro_vars <- c(
 
 # Strength variables
 strength_vars <- c(
-  "pt_knee_60ds_exten", "pt_knee_60ds_flexi",
-  "pt_knee_60ds_exten_divided_whole_body_total_mass",
-  "pt_knee_60ds_flexi_divided_whole_body_total_mass"
+  "pt_knee_60ds_exten",
+  "pt_knee_60ds_exten_divided_whole_body_total_mass"
 )
 
 # Balance variables
 balance_vars <- c(
-  "ellipse_eo", "vap_eo", "sdap_eo", "vml_eo", "sdml_eo", "vt_eo",
-  "ellipse_ec", "vap_ec", "sdap_ec", "vml_ec", "sdml_ec", "vt_ec"
+  "ellipse_eo", "vap_eo", "sdap_eo", "vml_eo", "sdml_eo", "vt_eo"
 )
 
 # Physical activity variables

@@ -35,7 +35,7 @@ This report covers the content of a [github repository](https://github.com/veras
 
 # Load and tidy data
 
-The [01_tidy_data.R](https://github.com/verasls/BaSEIB_BS_balance/blob/master/code/01_tidy_data.R) script loads the data.csv file. It then renames some variables, filters out some subjects, removes certain observations and computes the percent change between the two time points. Also, it creates a data frame in both wide and long forms.
+The [01_tidy_data.R](https://github.com/verasls/BaSEIB_BS_balance/blob/master/code/01_tidy_data.R) script loads the data.csv file. It then renames some variables, removes certain observations and computes the percent change between the two time points. Also, it creates a data frame in both wide and long forms.
 
 # Explore data
 
@@ -57,7 +57,7 @@ df_0m <- df_long %>% filter(time == "Baseline")
 df_6m <- df_long %>% filter(time == "6 months after")
 ``` 
 
-As there are several variables to analyse in this script, they were divided based on their "type", such as demographic and anthropometric variables and body composition variables. The first 4 data frames created were also put in a list, as the majority of the operations in this script were performed with [`purrr`](https://purrr.tidyverse.org) functionals. An example of this process is shown below:
+As there are several variables to analyse in this script, they were divided based on their "type", such as demographic and anthropometric variables and balance variables. The first 4 data frames created were also put in a list, as the majority of the operations in this script were performed with [`purrr`](https://purrr.tidyverse.org) functionals. An example of this process is shown below:
 
 ```{r}
 # Make a list of data frames to be used in the map functions
@@ -69,20 +69,12 @@ demo_anthro_vars <- c(
   "age", "height", "weight", "bmi", 
   "waist_circumference", "hip_circumference", "waist_hip_ratio"
 )
-
-# Body composition variables
-body_comp_vars <- c(
-  "percent_whole_body_fat_mass", "android_total_mass", "gynoid_total_mass",
-  "android_gynoid_ratio", "lower_limbs_total_mass", "upper_body_total_mass",
-  "whole_body_total_mass", "whole_body_fat_mass", "whole_body_lean_mass"
-)
 ``` 
 
 After that, normality tests were done to all of the variables using all the data frames in the `data` list. These data frames were mapped using the `purrr:map()` function and the user-defined function `map_shapiro()` that performs the `stats::shapiro.test()` function and extracts the test statistic and *p* value to put in a data frame.
 
 ```{r} 
 map(data, ~ map_shapiro(.x, demo_anthro_vars))
-map(data, ~ map_shapiro(.x, body_comp_vars))
 map(data, ~ map_shapiro(.x, strength_vars))
 map(data, ~ map_shapiro(.x, balance_vars))
 map(data, ~ map_shapiro(.x, pa_vars))
@@ -94,7 +86,6 @@ The variables were further tested for homocedasticity across group and across ti
 ```{r}
 # By time
 map_levene(df_control, demo_anthro_vars, "time")
-map_levene(df_control, body_comp_vars, "time")
 map_levene(df_control, strength_vars, "time")
 map_levene(df_control, balance_vars, "time")
 map_levene(df_control, pa_vars, "time")
@@ -102,7 +93,6 @@ map_levene(df_control, sf36_vars, "time")
 
 # By group
 map_levene(df_0m, demo_anthro_vars, "group")
-map_levene(df_0m, body_comp_vars, "group")
 map_levene(df_0m, strength_vars, "group")
 map_levene(df_0m, balance_vars, "group")
 map_levene(df_0m, pa_vars, "group")
@@ -120,6 +110,9 @@ df_long %>%
 ```
 
 # Test for effects
+
+The next script, [03_compare.R](https://github.com/verasls/BaSEIB_BS_balance/blob/master/code/03_compare.R), was  used to test for three conditions: i) baseline differences between groups; ii) time effect within group; and iii) treatment effect.
+
 
 ## Test for baseline differences
 
