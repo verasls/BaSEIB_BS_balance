@@ -26,6 +26,6 @@ Subdirectory **code**  contains three .R files and a subdirectory ([functions](c
 
 Subdirectory **figs** contains R script to produce the figures.
 
-## [Rmd](code/Rmd/)
+## [Rmd](Rmd/)
 
 Contains the source file to the data analysis report. The html version of the report can be visualized [here](put_link).
