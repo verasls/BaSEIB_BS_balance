@@ -1,5 +1,7 @@
 # BaSEIB_BS_balance
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3840115.svg)](https://doi.org/10.5281/zenodo.3840115)
+
 This repository contains data analysis resources from the manuscript "How does bariatric surgery affect fall risk factors?".
 
  ---
