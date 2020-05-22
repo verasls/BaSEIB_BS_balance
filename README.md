@@ -10,7 +10,7 @@ Florêncio Diniz-Sousa, Lucas Veras, Giorjines Boppre, Vítor Devezas, Hugo Sant
 
 ---
 
-You can find the data analysis report [here](put_link).
+You can find the data analysis report [here](https://lveras.com/reports/BaSEIB_BS_balance.html).
 
 There are 3 subdirectories in this repository:
 
@@ -28,4 +28,4 @@ Subdirectory **figs** contains R script to produce the figures.
 
 ## [Rmd](Rmd/)
 
-Contains the source file to the data analysis report. The html version of the report can be visualized [here](put_link).
+Contains the source file to the data analysis report. The html version of the report can be visualized [here](https://lveras.com/reports/BaSEIB_BS_balance.html).
