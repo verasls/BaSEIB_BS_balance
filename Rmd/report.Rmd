@@ -1,0 +1,194 @@
+---
+title: | 
+  | Data analysis report - 
+  | How does bariatric surgery affect fall risk factors?
+author: "Lucas Veras"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    toc_float: 
+      collapsed: true
+    highlight: tango
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+ 
+```{r loads, eval=TRUE, echo=FALSE, include=FALSE}
+library(here)
+library(devtools)
+library(tidyverse)
+library(janitor)
+library(car)
+library(gmodels)
+library(npsm)
+```
+
+<br>
+
+This report covers the content of a [github repository](https://github.com/verasls/BaSEIB_BS_balance) for the data analysis of the manuscript entitled "How does bariatric surgery affect fall risk factors?". The repository is organized as follows: the [code](https://github.com/verasls/BaSEIB_BS_balance/tree/master/code) folder contains  the data analysis R scripts and a subfolder [functions](https://github.com/verasls/BaSEIB_BS_balance/tree/master/code/functions), with some function definitions. Also, the .Rmd file used to generate this report is inside the [Rmd](https://github.com/verasls/BaSEIB_BS_balance/tree/master/Rmd) folder and the code to generate the manuscript figures are inside the [figs](https://github.com/verasls/BaSEIB_BS_balance/tree/master/figs) folder.
+
+<br>
+
+# Load and tidy data
+
+The [01_tidy_data.R](https://github.com/verasls/BaSEIB_BS_balance/blob/master/code/01_tidy_data.R) script loads the data.csv file. It then renames some variables, filters out some subjects, removes certain observations and computes the percent change between the two time points. Also, it creates a data frame in both wide and long forms.
+
+# Explore data
+
+The next script is the [02_explore.R](https://github.com/verasls/BaSEIB_BS_balance/blob/master/code/02_explore.R). It first creates 4 separate data frames for each combination of group (Control and Intervention) and time (Baseline and 6 months after surgery), then another 4 data frames, one for each group (including both times), and one for each time (including both groups). Code to build these data frames is shown bellow:
+
+```{r}
+con_0m <- df_long %>%
+  filter(group == "Control", time == "Baseline")
+con_6m <- df_long %>%
+  filter(group == "Control", time == "6 months after")
+int_0m <- df_long %>%
+  filter(group == "Intervention", time == "Baseline")
+int_6m <- df_long %>%
+  filter(group == "Intervention", time == "6 months after")
+
+df_control <- df_long %>% filter(group == "Control")
+df_intervention <- df_long %>% filter(group == "Intervention")
+df_0m <- df_long %>% filter(time == "Baseline")
+df_6m <- df_long %>% filter(time == "6 months after")
+``` 
+
+As there are several variables to analyse in this script, they were divided based on their "type", such as demographic and anthropometric variables and body composition variables. The first 4 data frames created were also put in a list, as the majority of the operations in this script were performed with [`purrr`](https://purrr.tidyverse.org) functionals. An example of this process is shown below:
+
+```{r}
+# Make a list of data frames to be used in the map functions
+data <- list(con_0m, con_6m, int_0m, int_6m)
+
+# Separate the variables by "group"
+# Demographic and anthropometric variables
+demo_anthro_vars <- c(
+  "age", "height", "weight", "bmi", 
+  "waist_circumference", "hip_circumference", "waist_hip_ratio"
+)
+
+# Body composition variables
+body_comp_vars <- c(
+  "percent_whole_body_fat_mass", "android_total_mass", "gynoid_total_mass",
+  "android_gynoid_ratio", "lower_limbs_total_mass", "upper_body_total_mass",
+  "whole_body_total_mass", "whole_body_fat_mass", "whole_body_lean_mass"
+)
+``` 
+
+After that, normality tests were done to all of the variables using all the data frames in the `data` list. These data frames were mapped using the `purrr:map()` function and the user-defined function `map_shapiro()` that performs the `stats::shapiro.test()` function and extracts the test statistic and *p* value to put in a data frame.
+
+```{r} 
+map(data, ~ map_shapiro(.x, demo_anthro_vars))
+map(data, ~ map_shapiro(.x, body_comp_vars))
+map(data, ~ map_shapiro(.x, strength_vars))
+map(data, ~ map_shapiro(.x, balance_vars))
+map(data, ~ map_shapiro(.x, pa_vars))
+map(data, ~ map_shapiro(.x, sf36_vars))
+``` 
+
+The variables were further tested for homocedasticity across group and across time. It was done similarly to the normality tests, using the user-define function `map_levene()` that uses the `car::leveneTest()` and extracts the *F* ratio and *p* value to put in a data frame.
+
+```{r}
+# By time
+map_levene(df_control, demo_anthro_vars, "time")
+map_levene(df_control, body_comp_vars, "time")
+map_levene(df_control, strength_vars, "time")
+map_levene(df_control, balance_vars, "time")
+map_levene(df_control, pa_vars, "time")
+map_levene(df_control, sf36_vars, "time")
+
+# By group
+map_levene(df_0m, demo_anthro_vars, "group")
+map_levene(df_0m, body_comp_vars, "group")
+map_levene(df_0m, strength_vars, "group")
+map_levene(df_0m, balance_vars, "group")
+map_levene(df_0m, pa_vars, "group")
+map_levene(df_0m, sf36_vars, "group")
+``` 
+
+Finally, some basic descriptive statistics were calculated:
+
+```{r, long_df}
+df_long %>% 
+  group_by(group, time) %>% 
+  summarise_at(
+    demo_anthro_vars, list(mean = mean, sd = sd), na.rm = TRUE
+  )
+```
+
+# Test for effects
+
+## Test for baseline differences
+
+First, a separate data frame with data only from baseline was again created, and the variables were again separated into groups similarly to the previous analysis.
+
+```{r, baseline_df}
+df_0m <- df_long %>% filter(time == "Baseline")
+
+# Separate the variables by "group"
+# Demographic and anthropometric variables
+demo_anthro_vars <- c(
+  "age", "height", "weight", "bmi", 
+  "waist_circumference", "hip_circumference", "waist_hip_ratio"
+)
+```
+
+Then, baseline characteristic comparisons between groups were performed with the Welch t-test (`stats::t.test()` function) or Wilcoxon rank sum test (`stats::wilcox.test()` function) for continuous variables and with Chi-square test (`gmodels::CrossTable()` function) for categorical variables. The user-defined function `map_compare_2_groups()` was used to build the formulas for all the variables, call the `stats::t.test()` and `stats::wilcox.test()` using the formula method and extract the test statistic and *p* value to put in a data frame.
+
+```{r baseline_comp}
+map_compare_2_groups(df_0m, demo_anthro_vars, "group")
+map_compare_2_groups(df_0m, strength_vars, "group")
+map_compare_2_groups(df_0m, balance_vars, "group")
+
+CrossTable(
+  df_0m[["sex"]], df_0m[["group"]],
+  fisher = TRUE, chisq = TRUE, format = "SPSS"
+)
+```
+
+## Test for time effect
+
+Comparisons between pre- and post-test in each group (time effect) were tested through paired t-test or Wilcoxon test. Again, the `map_compare_2_groups()` function was used, but now with the argument `paired = TRUE`:
+
+```{r, time_effect}
+map_compare_2_groups(df_control, demo_anthro_vars, "time", paired = TRUE)
+map_compare_2_groups(df_control, strength_vars, "time", paired = TRUE)
+map_compare_2_groups(df_control, balance_vars, "time", paired = TRUE)
+map_compare_2_groups(df_control, pa_vars, "time", paired = TRUE)
+map_compare_2_groups(df_control, sf36_vars, "time", paired = TRUE)
+```
+
+## Test for treatment effect
+
+Finally, treatment effect was tested by analysis of covariance (ANCOVA) or robust ANCOVA (non-parametric test). For both tests, the outcome variable used was the score of the given variable at 6 months post surgery, the covariate was the baseline score of the variable and the treatment effect was the group. The `stats::aov()` function was used to build the ANCOVA models within the user-defined `map_ancova()` function. This function was used to build the formula for all variables, call the `stats::aov()` function with the formula method and extract the covariate and group effects *p* value to put into a data frame.
+
+```{r, ancova}
+map_ancova(df, demo_anthro_vars[- c(1, 2)])
+map_ancova(df, strength_vars)
+map_ancova(df, balance_vars)
+map_ancova(df, pa_vars)
+map_ancova(df, sf36_vars[- c(9, 6, 7, 10)])
+```
+
+For the non-parametric ANCOVA, the `npsm::onecova()` function was used:
+
+```{r, np_ancova}
+# Non parametric ANCOVA
+data <- df %>% as.data.frame()
+
+onecova(
+  2,
+  data[, c("social_functioning_6m", "group")] %>% na.omit(),
+  data["social_functioning_0m"] %>% na.omit()
+)
+```
+
+
+# R session info
+
+```{r session_info, eval=TRUE}
+devtools::session_info()
+```
