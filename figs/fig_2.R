@@ -26,8 +26,8 @@ steps_plot_data <- df_plot %>%
   mutate(
     Time = recode_factor(
       Time,
-      steps__0m = "Baseline",
-      steps__6m = "6 months after"
+      steps_0m = "Baseline",
+      steps_6m = "6 months after"
     )
   ) %>%  
   group_by(Time, group) %>% 
